@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Defuse | Visual Relief</title>
+    <style>
+        :root { --bg: #0f172a; --teal: #2dd4bf; --text: #f1f5f9; --card: #1e293b; --red: #f43f5e; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: none; }
+        
+        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; justify-content: center; align-items: center; position: absolute; top: 0; left: 0; }
+        .active { display: flex; animation: fadeIn 0.5s; }
+        
+        .btn { background: var(--teal); color: var(--bg); border: none; padding: 20px; border-radius: 15px; width: 85%; max-width: 320px; font-weight: bold; font-size: 1.1rem; margin: 10px 0; cursor: pointer; z-index: 10; }
+        .sos { background: var(--red); color: white; }
+        
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .ui-over { z-index: 5; pointer-events: none; }
+        .interactive { pointer-events: auto; }
+
+        #nav-back { position: absolute; bottom: 40px; z-index: 100; opacity: 0.5; background: none; border: 1px solid white; color: white; padding: 10px 20px; border-radius: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="home" class="screen active">
+        <h1 style="color: var(--teal); letter-spacing: 5px;">DEFUSE</h1>
+        <p style="opacity: 0.6; margin-bottom: 30px;">Neutralize through sight and touch.</p>
+        
+        <button class="btn sos" onclick="show('sos')">SOS: BREATHING</button>
+        <button class="btn" onclick="show('visual')">VISUAL TENSION RELIEF</button>
+        <button class="btn" onclick="show('ice')" style="background:none; color:var(--teal); border: 1px solid var(--teal);">ICE RESET</button>
+    </div>
+
+    <div id="visual" class="screen">
+        <canvas id="canvas"></canvas>
+        <div class="ui-over">
+            <h2 style="color: white; font-weight: 300; margin-top: -50vh;">Follow the Glow</h2>
+            <p style="opacity: 0.4;">Slowly trace a Figure-8 with your finger.</p>
+        </div>
+        <button id="nav-back" class="interactive" onclick="show('home')">EXIT RELIEF</button>
+    </div>
+
+    <div id="sos" class="screen"><h2>Breathe with the light...</h2><button class="btn" onclick="show('home')">STABILIZED</button></div>
+    <div id="ice" class="screen"><h2>15s Ice Reset</h2><button class="btn" onclick="show('home')">DONE</button></div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        function show(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (id === 'visual') initVisual();
+        }
+
+        function initVisual() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+            animate();
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 5 + 2;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = 'rgba(45, 212, 191, 0.3)';
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (mouse.x) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+                    if (distance < 100) {
+                        this.x += dx * 0.05;
+                        this.y += dy * 0.05;
+                        this.color = 'rgba(45, 212, 191, 0.8)';
+                    } else {
+                        this.color = 'rgba(45, 212, 191, 0.3)';
+                    }
+                }
+                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function animate() {
+            if (!document.getElementById('visual').classList.contains('active')) return;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.2)'; // Tail effect
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+        window.addEventListener('touchstart', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+        window.addEventListener('touchmove', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+        window.addEventListener('touchend', () => { mouse.x = null; mouse.y = null; });
+
+        function fadeIn() { /* Animation helper */ }
+    </script>
+</body>
+</html>
